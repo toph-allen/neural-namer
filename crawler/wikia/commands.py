@@ -7,6 +7,7 @@ import pickle
 import csv
 import urllib.request
 import tempfile
+import errno
 from pyunpack import Archive
 from lxml import etree
 from lxml.etree import XMLParser
@@ -14,10 +15,19 @@ from collections import Counter
 
 from crawler.wikia.sources import SOURCES
 
+
 def fetch(outfile):
     """Fetch character names from sources and save them to the outfile."""
     authors = Counter()
     vocab = Counter()
+
+    # Check to see if data directory exists before trying to open a file there.
+    if not os.path.exists(os.path.dirname(outfile)):
+        try:
+            os.makedirs(os.path.dirname(outfile))
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
 
     parser = XMLParser(huge_tree=True)
     with open(outfile, 'w') as file_handler:
